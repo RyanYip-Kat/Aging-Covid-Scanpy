@@ -1,109 +1,70 @@
-dc_dict={"2":"pDC",
-        "8":"pDC",
-        "12":"pDC",
-        "7":"cDC1",
-        "0":"cDC2",
-        "1":"cDC2",
-        "3":"cDC2",
-        "4":"cDC2",
-        "6":"cDC2",
-        "5":"cDC2",
-        "9":"cDC2",
-        "10":"cDC2",
-        "11":"cDC2"}
+import os
+import scanpy as sc
+import scirpy as ir
+import argparse
+
+import pandas as pd
+import seaborn as sns
+import numpy as np
+import matplotlib.pyplot as plt
+
+from collections import Counter
+
+class Model(object):
+   def __init__(self,path,tcr_path=None,n_top_genes=5000,outdir="./scanpy_result"):
+      self._path=path
+      self._outdir=outdir
+      self._tcr_path=tcr_path
+
+      self._n_top_genes=n_top_genes
+
+      self.graphclust_path=os.path.join(self._path,"outs/analysis/clustering/graphclust/clusters.csv")
+      self.km_path=os.path.join(self._path,"analysis/clustering/kmeans_10_clusters/clusters.csv")
+      self.mtx_path=os.path.join(self._path,"outs/filtered_feature_bc_matrix")
+
+   def _load_data(self):
+      adata=sc.read_10x_mtx(self.mtx_path,cache=True)
+      orig_cluster=pd.read_csv(self.graphclust_path)
+      km_cluster=pd.read_csv(self.km_path)
+
+      print("*** Add original message")
+      adata.obs["orig_cluster"]=orig_cluster.Cluster.to_list()
+      adata.obs["km_cluster"]=km_cluster.Cluster.to_list()
+       
+      cells=adata.obs_names.to_list()
+      idents=[cell.split("-")[1] for cell in cells]
+      adata.obs["idents"]=idents
+
+      self._n_cells=adata.shape[0]
+      self._n_features=adata.shape[1]
+      print("origin adata shape is [{},{}]".format(self._n_cells,self._n_features))
+      adata=self._remove(adata)  # remove dropout features
+
+      if self._tcr_path is not None:
+            if os.path.exists(self._tcr_path):
+               adata.uns["tcr_path"]=self._tcr_path
+               try:
+                  adata_tcr=ir.read_10x_vdj(self._tcr_path)
+                  print("*** Merge adata with tcr")
+                  ir.pp.merge_with_tcr(adata,adata_tcr)
+
+                  print("*** chain pairing")
+                  ir.tl.chain_pairing(adata)
+
+                  ir.pl.group_abundance(adata, groupby="chain_pairing", target_col="orig_cluster")
+                  plt.savefig(os.path.join(args.outdir,"chain_pairing.pdf"))
+                  plt.close()
+
+                  print("Fraction of cells with more than one pair of TCRs: {:.2f}".format(np.sum(
+                     adata.obs["chain_pairing"].isin(["Extra beta", "Extra alpha", "Two full chains"])) / adata.n_obs))
+               except:
+                  print("Add TCR Invalid!!!")
+
+      #if self._subset is not None:
+      #  adata=self._select(adata)
+      #self.adata=adata
+      adata.uns["path"]=self._path
+      return adata
 
 
-mono_dict={"0":"CD14",
-        "1":"CD14",
-        "2":"CD14",
-        "3":"CD14",
-        "6":"CD14",
-        "7":"CD14",
-        "8":"CD14",
-        "9":"CD14",
-        "12":"CD14",
-        "5":"Intermed",
-        "4":"CD16",
-        "10":"CD16",
-        "11":"CD16"}
-
-bc_dict={"1":"Naive",
-        "2":"Naive",
-        "3":"Naive",
-        "9":"Naive",
-        "10":"Naive",
-        "11":"Naive",
-        "12":"Naive",
-        "13":"Naive",
-        "0":"Memory",
-        "4":"Memory",
-        "5":"Memory",
-        "7":"Memory",
-        "15":"Memory",
-        "16":"Memory",
-        "6":"ASC",
-        "14":"ASC",
-        "8":"ABC"}
-
-nk_dict={"1":"NK2",
-        "4":"NK2",
-        "5":"NK2",
-        "8":"NK2",
-        "9":"NK2",
-        "10":"NK2",
-        "7":"NK1",
-        "0":"NK3",
-        "2":"NK3",
-        "3":"NK3",
-        "6":"NK3"}
-
-tc_dict={"0":"CD4",
-        "1":"CD4",
-        "5":"CD4",
-        "9":"CD4",
-        "10":"CD4",
-        "CD4":"CD4",
-        "2":"CD8",
-        "3":"CD8",
-        "4":"CD8",
-        "6":"CD8",
-        "12":"CD8",
-        "CD8":"CD8",
-        "7":"CD4-CD8-",
-        "8":"CD4+CD8+",
-        "11":"T-mito",
-        "13":"T-mito",
-        "T-mito":"T-mito"}
-
-cd4_dict={"0":"CD4 Naive",
-        "3":"CD4 Tcm",
-        "1":"CD4 Tem",
-        "2":"CD4 Tem",
-        "4":"CD4 Tem",
-        "7":"CD4 Tem",
-        "8":"CD4 Tem",
-        "9":"CD4 Tem",
-        "5":"CD4 Treg",
-        "6":"CD4 Tex"}
-
-cd8_dict={"1":"CD8 Naive",
-        "2":"CD8 Naive",
-        "7":"CD8 Naive",
-        "8":"CD8 Naive",
-        "Naive":"CD8 Naive",
-        "0":"CD8 Tem",
-        "9":"CD8 Tem",
-        "10":"CD8 Tem",
-        "12":"CD8 Tem",
-        "13":"CD8 Tem",
-        "14":"CD8 Tem",
-        "15":"CD8 Tem",
-        "16":"CD8 Tem",
-        "17":"CD8 Tem",
-        "3":"CD8 CTL",
-        "5":"CD8 CTL",
-        "11":"CD8 CTL",
-        "CTL":"CD8 CTL",
-        "4":"CD8 Tex",
-        "6":"CD8 Tex"}
-
+   
