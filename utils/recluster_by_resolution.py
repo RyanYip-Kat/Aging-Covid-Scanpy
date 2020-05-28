@@ -25,7 +25,7 @@ adata=sc.read_h5ad(args.data)
 
 print("**** clustering ****")
 sc.tl.leiden(adata,resolution=args.resolution)
-sc.tl.louvain(adata,resolution=args.resolution)
+#sc.tl.louvain(adata,resolution=args.resolution)
 
 print("*** find markers")
 sc.tl.rank_genes_groups(adata,groupby="leiden", method='t-test',n_genes=500,corr_method="bonferroni")

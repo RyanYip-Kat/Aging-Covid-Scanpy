@@ -89,16 +89,16 @@ def violin_sns(
     df["group"]=adata.obs[groupby]
     if orient=="h":
         _ax = sns.violinplot(y="group", x="expression",data=df,
-                             order=order,palette="Set2",
-                             scale=scale)#palette={"AA": "y", "YA": "b"}
+                             order=order,#palette="Set2",
+                             scale=scale,palette={"cDC2-1":"#1F77B4","cDC2-2":"#E99575"})#palette={"AA": "y", "YA": "b"}
         if strip:
            _ax = sns.stripplot(y="group", x="expression", data=df,
                                  dodge=True,
                                 jitter=jitter, color='black', size=size,ax=_ax)
     elif orient=="v":
         _ax = sns.violinplot(x="group",y="expression",data=df,
-                             order=order,palette="Set2",
-                             scale=scale)#palette={"AA": "y", "YA": "b"}
+                             order=order,#palette="Set2",
+                             scale=scale,palette={"cDC2-1":"#1F77B4","cDC2-2":"#E99575"})#palette={"AA": "y", "YA": "b"}
         if strip:
            _ax = sns.stripplot(x="group", y="expression", data=df,
                                  dodge=True,
@@ -108,7 +108,7 @@ def violin_sns(
         if not os.path.exists(figdir):
             os.makedirs(figdir)
         filename=os.path.join(figdir,gene_name+"_violin_sns.pdf")
-        pl.savefig(filename, dpi=120,figsize=(16,8),bbox_inches='tight')
+        pl.savefig(filename, dpi=200,figsize=(24,16),bbox_inches='tight')
         pl.close()
 
     else:

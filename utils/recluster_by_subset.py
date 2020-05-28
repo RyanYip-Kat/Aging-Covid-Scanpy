@@ -17,6 +17,7 @@ parser.add_argument("-d","--data",type=str,default=None)
 parser.add_argument("-s","--subset",nargs="+",type=str,default=None)
 parser.add_argument("-c","--column",type=str,default="leiden")
 parser.add_argument("-b","--batch_key",type=str,default=None)
+parser.add_argument("-i","--invert", action='store_true', default=False)
 parser.add_argument("-r","--resolution",type=float,default=1.2)
 
 args=parser.parse_args()
@@ -29,7 +30,7 @@ adata=sc.read_h5ad(args.data)
 
 print("*** subset")
 print("Subset data by {}".format(args.column))
-adata=subset_by_column(adata,args.subset,args.column)
+adata=subset_by_column(adata,args.subset,args.column,invert=args.invert)
 adata=adata.raw.to_adata()
 
 print("*** tranform and reduction")

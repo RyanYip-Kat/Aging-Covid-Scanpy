@@ -38,7 +38,7 @@ def subset_by_cell_feature(adata,cells=None,features=None,invert=False):
     return data
 
 
-def get_rank_group_genes(adata,pval=0.05,fc=0.25,outdir="./markers",
+def get_rank_group_genes(adata,pval=None,fc=0.25,outdir="./markers",
         n_top=None,back=False,
         key="rank_genes_groups",prefix=""):
     # key : rank_genes_groups or rank_genes_groups_filtered
